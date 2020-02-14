@@ -1,5 +1,6 @@
 # CBBlazorEFID
 Live! Code 32: Blazor - Entity & Identity Framework
+
 Develop Web UIs using C# instead of JavaScript
 - Blazor Server
 - Entity Framework
