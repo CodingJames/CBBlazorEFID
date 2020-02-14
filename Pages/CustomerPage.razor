@@ -1,0 +1,92 @@
+@page "/customer"
+@attribute [Authorize]
+@inject AppDbContext db
+@inject ILogger<Customer> logger
+
+<h1>Customer</h1>
+
+<div class="form-group">
+    <label>Name</label>
+    <div class="col-md-4">
+        <input class="form-control" @bind="name"/>
+    </div>
+</div>
+
+<div class="form-group">   
+    <div class="col-md-4">
+        <button class="btn btn-primary" @onclick="Create">Create</button>
+    </div>
+</div>
+
+@if (isLoadded)
+{
+    <table class="table table-hover">
+        <thead>
+            <th>ID</th>
+            <th>Name</th>
+            <th></th>
+        </thead>
+        <tbody>
+            @foreach (var customer in customers)
+            {
+                <tr>
+                    <td>@customer.Id</td>
+                    <td>@customer.Name</td>
+                    <td><button class="btn btn-sm btn-danger" @onclick="@(() => Delete(customer.Id))">delete</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="spinner-border text-success"></div>
+}
+
+
+@code {
+    string name;
+    bool isLoadded;
+    List<Customer> customers = new List<Customer>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            customers = await db.Customers.ToListAsync();
+            isLoadded = true;
+            logger.LogInformation($"Customer loadded");
+            StateHasChanged();
+        }
+    }
+
+    async void Create()
+    {
+        isLoadded = false;
+        StateHasChanged();
+
+        var customer = new Customer { Name = name };
+        await db.AddAsync(customer);
+        await db.SaveChangesAsync();
+        customers = await db.Customers.ToListAsync();
+        isLoadded = true;        
+        logger.LogInformation($"Customer({name}) created.");
+        StateHasChanged();
+    }
+
+    async void Delete(int id)
+    {
+        isLoadded = false;
+        StateHasChanged();
+
+        var customer = await db.Customers.FindAsync(id);
+
+        db.Remove(customer);
+        await db.SaveChangesAsync();
+
+        customers = await db.Customers.ToListAsync();
+        isLoadded = true;        
+        logger.LogInformation($"Customer({name}) deleted.");
+        StateHasChanged();
+    }
+}

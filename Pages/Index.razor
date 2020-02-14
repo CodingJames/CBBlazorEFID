@@ -1,0 +1,77 @@
+﻿@page "/"
+@inject UserManager<AppUser> userManager
+@inject ILogger<Index> logger
+@inject AuthenticationStateProvider authProvider;
+@inject IConfiguration config
+
+<div>@ip</div>
+<AuthorizeView>
+    <Authorized>
+        <h1>@name</h1>
+        You're authorized.<br/>
+        
+        
+        <form method="get" action="logout">
+            <button>Logout</button>
+        </form>
+    </Authorized>
+    <NotAuthorized>
+        <div class="cotainer">
+            <div class="row justify-content-center">
+                <div class="col-md-4">
+                    <div class="card">                        
+                        <div class="card-header text-center">CodeBangkok</div>
+                        <div class="card-body">
+                            <form method="get" action="login">
+                                <div class="form-group row">
+                                    <label class="col-md-4 col-form-label text-md-right">Username</label>
+                                    <div class="col-md-6">
+                                        <input class="form-control" @bind="username" name="username"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-md-4 col-form-label text-md-right">Password</label>
+                                    <div class="col-md-6">
+                                        <input type="password" class="form-control" @bind="password" name="password">
+                                    </div>
+                                </div>
+                                <div class="col-md-6 offset-md-4">
+                                    <button class="btn btn-primary">Login</button>
+                                    <button class="btn btn-primary" @onclick="Register">Register</button>
+                                </div>
+                            </form>
+                        </div>                
+                    </div>
+                </div>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    string username;
+    string password;
+    string name;    
+    string ip;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ip = config["Server:WebServer:IPAddress"];
+        var auth = await authProvider.GetAuthenticationStateAsync();
+        if (auth.User.Identity.IsAuthenticated)
+        {
+            name = auth.User.Identity.Name;
+
+            
+        }
+    }
+
+    async void Register()
+    {
+        var user = new AppUser { UserName = username };
+        var result = await userManager.CreateAsync(user, password);
+        if (result.Succeeded) logger.LogInformation("Register success");
+        else logger.LogError("Register failed");
+    }
+
+}
